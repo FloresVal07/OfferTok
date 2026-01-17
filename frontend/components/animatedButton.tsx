@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import { Image, Animated, Pressable, Text, StyleSheet } from "react-native";
 import * as Haptics from "expo-haptics";
 
-export function SimpleButton({ onPress, title, color}: { onPress:any, title:string, color:string}) {
+export function SimpleButton({ onPress, title, color, textColor}: { onPress:any, title:string, color:string, textColor:string}) {
     // The animation value (1 = 100% size)
     const scaleValue = useRef(new Animated.Value(1)).current;
 
@@ -40,13 +40,13 @@ export function SimpleButton({ onPress, title, color}: { onPress:any, title:stri
                     { backgroundColor: color, opacity: pressed? 0.9 : 1},
                 ]}
             >
-                <Text style={styles.buttonText}>{title}</Text>
+                <Text style={[styles.buttonText, {color: textColor}]}>{title}</Text>
             </Pressable>
         </Animated.View>
     );
 }
 
-export function IconedButton({ onPress, url, title, color, radius}: { onPress:any, url:any, title:string, color:string, radius:number}) {
+export function IconedButton({ onPress, image, title, color, radius}: { onPress:any, image:any, title:string, color:string, radius:number}) {
     // The animation value (1 = 100% size)
     const scaleValue = useRef(new Animated.Value(1)).current;
 
@@ -84,7 +84,7 @@ export function IconedButton({ onPress, url, title, color, radius}: { onPress:an
                     { borderRadius: radius, borderWidth: 2, borderColor: color, opacity: pressed? 0.9 : 1},
                 ]}
             >
-                <Image source={require(`../assets/images/${url}`)} />
+                <Image source={image} style={{aspectRatio: 1/1 ,height: '50%'}}/>
                 <Text style={[styles.buttonText, {color: color}]}>{title}</Text>
             </Pressable>
         </Animated.View>
@@ -110,7 +110,9 @@ const styles = StyleSheet.create({
         borderRadius: 4, // Your squarish look
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: 'transparent'
+        backgroundColor: 'transparent',
+        flexDirection: 'row',
+        gap: 20
     },
     buttonText: {
         color: "#000",
