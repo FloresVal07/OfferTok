@@ -74,10 +74,15 @@ export default function HomeScreen() {
         return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(emailInput);
     }
 
+    function checkLocation(){
+        return /^\d{5}$/.test(zipInput);
+    }
+
     function stepDown(){
         if(step <= 0){return console.log("No Previous Pages To Step Towards")}
         setStep(step-1);
     }
+
     function stepForward(){
         //eventually when done fill this in
         //if(step >= max pages){return console.log("No Further Pages To Step Towards")}
@@ -110,20 +115,34 @@ export default function HomeScreen() {
     }
     
     const handleGPS = async () => {
-        // 1. Request permission
         let { status } = await Location.requestForegroundPermissionsAsync();
         
         if (status !== 'granted') {
-            alert('Permission to access location was denied. Please enter your zip code.');
+            alert('Permission denied');
             return;
         }
 
-        // pos
         let location = await Location.getCurrentPositionAsync({});
         
-        // coords
-        console.log("Found you at:", location.coords.latitude, location.coords.longitude);
-        stepForward();
+        //reverse geocoding logic
+        try {
+            let address = await Location.reverseGeocodeAsync({
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude
+            });
+
+            if (address.length > 0) {
+                const userZip = address[0].postalCode?address[0].postalCode:"";
+                setZipInput(userZip); // Automatically fills your Zip input field
+                console.log("Zip Code found:", userZip);
+                
+                // Optional: Auto-advance after finding zip
+                stepForward(); 
+            }
+        } catch (error) {
+            console.log("Reverse Geocode failed", error);
+            alert("Couldn't find your zip code. Please enter it manually.");
+        }
     };
 
     {/**Welcome Page */}
@@ -281,7 +300,7 @@ export default function HomeScreen() {
                     <View style={{ width: '30%' }}>
                         <SimpleButton 
                             title="Set" 
-                            onPress={() => stepForward()} 
+                            onPress={() => checkLocation() ? stepForward() : null} 
                             color="#F2F4F8" 
                             textColor="#000000"
                         />
