@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, Image, Pressable } from 'react-native';
+import * as Location from "expo-location";
 // 1. Import your new custom button
 import { IconedButton, SimpleButton } from '../components/animatedButton'; 
 import  { CustomInput }  from "../components/submissionForm";
@@ -17,6 +18,7 @@ export default function HomeScreen() {
     const [lastName, setLastName] = useState("");
     const [emailInput, setEmailInput] = useState("");
     const [passwordInput, setPasswordInput] = useState("");
+    const [zipInput, setZipInput] = useState("");
     const [passwordVisibility, setPasswordVisibility] = useState(false);
 
     function stepDown(){
@@ -29,6 +31,24 @@ export default function HomeScreen() {
         setStep(step+1);
     }
 
+    const handleGPS = async () => {
+        // 1. Request permission
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        
+        if (status !== 'granted') {
+            alert('Permission to access location was denied. Please enter your zip code.');
+            return;
+        }
+
+        // pos
+        let location = await Location.getCurrentPositionAsync({});
+        
+        // coords
+        console.log("Found you at:", location.coords.latitude, location.coords.longitude);
+        stepForward();
+    };
+
+    {/**Welcome Page */}
     if (step === 0) {
         return (
             <View style={[styles.container, {gap: 75}]}>
@@ -40,6 +60,7 @@ export default function HomeScreen() {
                 <SimpleButton title="Get Started" onPress={() => stepForward()} color="#F2F4F8" textColor="#000000"/>
             </View>
         );
+    {/**Login Page*/}
     }else if(step === 1) {
         return (
             <View style={[styles.container, {gap: 60}]}>
@@ -64,6 +85,7 @@ export default function HomeScreen() {
                 <Text onPress={() => stepDown()} style={[styles.text, { fontSize: 16, width: '90%', textAlign: 'center'}]}>Cancel</Text> 
             </View>
         );
+    {/**Email Query Page*/}
     }else if(step === 2){
         return (
             <View style={[styles.container, {gap: 35}]}>
@@ -138,8 +160,50 @@ export default function HomeScreen() {
                 <Text onPress={() => stepDown()} style={[styles.text, { fontSize: 16, width: '90%', textAlign: 'center'}]}>Cancel</Text> 
             </View>
         );
-    }
+    {/**Location Query Page */}
+    }else if(step === 3){
+        return(
+            <View style={[styles.container, {gap: 40}]}>
+                <Image source={require("../assets/images/locationBlack.png")}/>
+                <Text style={[styles.text, { fontSize: 34, width: '90%', textAlign: 'center'}]}>Where would you like to discover deals from?</Text> 
+                <IconedButton 
+                    onPress={() => handleGPS()}
+                    image={require("../assets/images/locationBlue.png")}
+                    title="Use my location"
+                    color="#0F62FE"
+                    radius={25}/>
+                <Text style={[styles.text, { fontSize: 34, width: '90%', textAlign: 'center'}]}>Or</Text>     
+                <View style={{ 
+                    flexDirection: 'row', 
+                    width: '85%',          // Increased slightly for better look
+                    alignItems: 'center', 
+                    alignSelf: 'center', 
+                    gap: 10                // Adds a clean space between input and button
+                }}>
+                    {/* This View takes up the majority of the space */}
+                    <View style={{ flex: 1 }}>
+                        <CustomInput
+                            label=""
+                            placeholder="Zipcode"
+                            value={zipInput}
+                            onChangeText={setZipInput}
+                            keyboardType="number-pad" // Optimization for Zipcodes
+                        />
+                    </View>
 
+                    {/* This View stays exactly at the size it needs to be */}
+                    <View style={{ width: '30%' }}>
+                        <SimpleButton 
+                            title="Set" 
+                            onPress={() => stepForward()} 
+                            color="#F2F4F8" 
+                            textColor="#000000"
+                        />
+                    </View>
+                </View>
+            </View>
+        );
+    }
     return (
         <View style={styles.container}>
             <Text style={[styles.text, { fontSize: 50, width: '90%', textAlign: 'center'}]}>Access Granted!</Text> 
