@@ -17,9 +17,62 @@ export default function HomeScreen() {
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [emailInput, setEmailInput] = useState("");
+    const [usernameInput, setUsernameInput] = useState("");
     const [passwordInput, setPasswordInput] = useState("");
     const [zipInput, setZipInput] = useState("");
     const [passwordVisibility, setPasswordVisibility] = useState(false);
+
+    function isValid(inputString:string, length:number){
+        return inputString.length >= length && !(inputString.includes(" "));
+    }
+
+    function checkFirstName(){
+        return isValid(firstName, 3) && /^\p{L}+$/u.test(firstName);
+    }
+
+    function checkLastName(){
+        return isValid(lastName, 3) && /^\p{L}+$/u.test(lastName)
+    }
+
+    function checkUsername(){
+        //make sure the basic requirements are met first
+        if(!isValid(usernameInput, 3)){return false}
+
+        //make absolutely sure these names cannot be instantiated
+        const RESTRICTED_USERNAMES = [
+            // --- IMPERSONATION (Brand Protection) ---
+            'admin', 'administrator', 'offertok', 'offertok_official', 'offertok_team',
+            'official', 'support', 'help', 'moderator', 'mod', 'staff', 'verified', 
+            'system', 'security', 'info', 'contact', 'root', 'service',
+
+            // --- SCAMMER BAIT (Safety) ---
+            'giveaway', 'winner', 'prize', 'payout', 'reward', 'security_check',
+            'verify_account', 'gift_card', 'free_deals', 'promo_code', 'claims',
+
+            // --- TECHNICAL RESERVED WORDS (System stability) ---
+            'null', 'undefined', 'api', 'index', 'home', 'settings', 'config',
+            'login', 'signup', 'profile', 'user', 'guest', 'anonymous', 'test',
+            'search', 'status', 'auth', 'connect', 'dashboard', 'explore',
+
+            // --- UI/UX ELEMENTS (Prevents confusion) ---
+            'loading', 'success', 'error', 'warning', 'message', 'notification'
+        ];
+        const bannedSet = new Set(RESTRICTED_USERNAMES);
+        if(bannedSet.has(usernameInput.toLowerCase())){
+            return false;
+        }
+
+        return /^[\p{L}0-9_]+$/u.test(usernameInput);
+    }
+
+    function checkPassword(){
+        // 1. No spaces and 8 long
+        return isValid(passwordInput, 8)
+    }
+
+    function checkEmail(){
+        return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(emailInput);
+    }
 
     function stepDown(){
         if(step <= 0){return console.log("No Previous Pages To Step Towards")}
@@ -31,6 +84,31 @@ export default function HomeScreen() {
         setStep(step+1);
     }
 
+    function checkSignupFormInfo(){
+        if(!checkFirstName()){
+            console.log("Invalid first name");
+            return false;
+        } 
+        if(!checkLastName()){
+            console.log("Invalid last name");
+            return false;
+        }
+        if(!checkUsername()){
+            console.log("Invalid user name");
+            return false;
+        }
+        if(!checkPassword()){
+            console.log("Invalid password");
+            return false;
+        }
+        if(!checkEmail()){
+            console.log("Invalid email");
+            return false;
+        }
+        console.log("Success!");
+        return true;
+    }
+    
     const handleGPS = async () => {
         // 1. Request permission
         let { status } = await Location.requestForegroundPermissionsAsync();
@@ -119,6 +197,12 @@ export default function HomeScreen() {
                         </View>
                     </View>
                     <CustomInput 
+                        label="Username"
+                        placeholder="Enter your username here"
+                        value={usernameInput}
+                        onChangeText={setUsernameInput}
+                    />
+                    <CustomInput 
                         label="Email"
                         placeholder="Enter your email here"
                         value={emailInput}
@@ -146,14 +230,16 @@ export default function HomeScreen() {
                             style={{ paddingLeft: 10, paddingTop: 15 }} // Padding adjusts for the label height
                         >
                             <Image 
-                                source={passwordVisibility ? require("../assets/images/open-eye.png") : require("../assets/images/closed-eye.png")}
+                                source={passwordVisibility ? require("../assets/images/closed-eye.png") : require("../assets/images/open-eye.png")}
                                 style={{ width: 25, height: 25 }} // Always give images fixed dimensions
                                 resizeMode="contain"
                             />
                         </Pressable>
                     </View>
                     <View>
-                        <SimpleButton title="Submit" onPress={() => stepForward()} color="#0F62FE" textColor="#ffffff"/>
+                        <SimpleButton title="Submit" onPress={() => {
+                            checkSignupFormInfo() ? stepForward() : null
+                        }} color="#0F62FE" textColor="#ffffff"/>
                     </View>
                 </View>
                 <Text style={[styles.text, { fontSize: 16, width: '90%', textAlign: 'center', fontWeight: '300'}]}>By continuing you agree to OfferTok's Terms of Service and acknowledge the OfferTok Privacy Policy</Text> 
