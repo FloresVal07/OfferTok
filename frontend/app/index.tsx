@@ -4,6 +4,7 @@ import * as Location from "expo-location";
 // 1. Import your new custom button
 import { IconedButton, SimpleButton } from '../components/animatedButton'; 
 import  { CustomInput }  from "../components/submissionForm";
+import { registerUser } from "../services/api";
 
 export default function HomeScreen() {
     const logoMap = [
@@ -138,12 +139,37 @@ export default function HomeScreen() {
                 
                 // Optional: Auto-advance after finding zip
                 stepForward(); 
+                await handleRegisterCall();
             }
         } catch (error) {
             console.log("Reverse Geocode failed", error);
             alert("Couldn't find your zip code. Please enter it manually.");
         }
     };
+
+    const handleRegisterCall = async () => {
+        if(!checkSignupFormInfo()){
+            console.log("Invalid sign up information");
+            return;
+        }
+
+        const userData = {
+            firstName,
+            lastName,
+            email: emailInput,
+            username: usernameInput,
+            password: passwordInput,
+            zipcode: zipInput
+        }
+        
+        // 3. Fire the request
+        try {
+            await registerUser(userData);
+            stepForward(); // Move to Access Granted page
+        } catch (err:any) {
+            alert(err.message); // Show the error from the Go backend
+        }
+    }
 
     {/**Welcome Page */}
     if (step === 0) {
@@ -300,7 +326,15 @@ export default function HomeScreen() {
                     <View style={{ width: '30%' }}>
                         <SimpleButton 
                             title="Set" 
-                            onPress={() => checkLocation() ? stepForward() : null} 
+                            onPress={() => {
+                                if(checkLocation()){
+                                    console.log("Location valid, starting registration...");
+                                    handleRegisterCall();
+                                    stepForward();
+                                } else {
+                                    alert("Please enter a valid Zip code first.");
+                                }
+                            }} 
                             color="#F2F4F8" 
                             textColor="#000000"
                         />
@@ -308,13 +342,14 @@ export default function HomeScreen() {
                 </View>
             </View>
         );
+    }else{
+        return (
+            <View style={styles.container}>
+                <Text style={[styles.text, { fontSize: 50, width: '90%', textAlign: 'center'}]}>Access Granted!</Text> 
+                <SimpleButton title="Go Back" onPress={() => stepDown()} color="#F2F4F8" textColor="#000000"/>
+            </View>
+        );
     }
-    return (
-        <View style={styles.container}>
-            <Text style={[styles.text, { fontSize: 50, width: '90%', textAlign: 'center'}]}>Access Granted!</Text> 
-            <SimpleButton title="Go Back" onPress={() => stepDown()} color="#F2F4F8" textColor="#000000"/>
-        </View>
-    );
 }
 
 const styles = StyleSheet.create({
