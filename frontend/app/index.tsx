@@ -75,8 +75,10 @@ export default function HomeScreen() {
         return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(emailInput);
     }
 
-    function checkLocation(){
-        return /^\d{5}$/.test(zipInput);
+    function checkLocation(overrideZip?: string) {
+        // Use the passed variable if it exists, otherwise fall back to state
+        const zipToTest = overrideZip !== undefined ? overrideZip : zipInput;
+        return /^\d{5}$/.test(zipToTest);
     }
 
     function stepDown(){
@@ -126,20 +128,24 @@ export default function HomeScreen() {
         try {
             let location = await Location.getCurrentPositionAsync({});
             
-            //reverse geocoding logic
             let address = await Location.reverseGeocodeAsync({
                 latitude: location.coords.latitude,
                 longitude: location.coords.longitude
             });
 
             if (address.length > 0) {
-                const userZip = address[0].postalCode?address[0].postalCode:"";
-                setZipInput(userZip); // Automatically fills your Zip input field
+                const userZip = address[0].postalCode ? address[0].postalCode : "";
+                
+                setZipInput(userZip); // Tell React to update the UI later
                 console.log("Zip Code found:", userZip);
                 
-                // Optional: Auto-advance after finding zip
-                stepForward(); 
-                await handleRegisterCall();
+                // Wait for the Go backend to confirm the user is saved
+                const isSuccess = await handleRegisterCall(userZip);
+                
+                // Only step forward if the backend gave the green light
+                if (isSuccess) {
+                    stepForward(); 
+                }
             }
         } catch (error) {
             console.log("Reverse Geocode failed", error);
@@ -147,7 +153,14 @@ export default function HomeScreen() {
         }
     };
 
-    const handleRegisterCall = async () => {
+    const handleRegisterCall = async (resolvedZip?: string) => {
+        const finalZip = resolvedZip !== undefined ? resolvedZip : zipInput;
+
+        // Optional: If you want to double-check validation before firing
+        if (!checkLocation(finalZip)) {
+            console.log("Aborting: Invalid zip code ->", finalZip);
+            return false; 
+        }
 
         const userData = {
             firstName: firstName,
@@ -155,15 +168,15 @@ export default function HomeScreen() {
             email: emailInput,
             username: usernameInput,
             password: passwordInput,
-            zipcode: zipInput
+            zipcode: finalZip // Use the guaranteed variable!
         }
         
-        // 3. Fire the request
         try {
             await registerUser(userData);
-            stepForward(); // Move to Access Granted page
+            return true; // Tell the frontend it worked
         } catch (err:any) {
-            alert(err.message); // Show the error from the Go backend
+            alert(err.message); 
+            return false; // Tell the frontend it failed
         }
     }
 
