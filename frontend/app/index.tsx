@@ -123,10 +123,10 @@ export default function HomeScreen() {
             return;
         }
 
-        let location = await Location.getCurrentPositionAsync({});
-        
-        //reverse geocoding logic
         try {
+            let location = await Location.getCurrentPositionAsync({});
+            
+            //reverse geocoding logic
             let address = await Location.reverseGeocodeAsync({
                 latitude: location.coords.latitude,
                 longitude: location.coords.longitude
@@ -148,14 +148,10 @@ export default function HomeScreen() {
     };
 
     const handleRegisterCall = async () => {
-        if(!checkSignupFormInfo()){
-            console.log("Invalid sign up information");
-            return;
-        }
 
         const userData = {
-            firstName,
-            lastName,
+            firstName: firstName,
+            lastName: lastName,
             email: emailInput,
             username: usernameInput,
             password: passwordInput,
