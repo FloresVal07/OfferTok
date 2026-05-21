@@ -23,21 +23,21 @@ export default function HomeScreen() {
     const [zipInput, setZipInput] = useState("");
     const [passwordVisibility, setPasswordVisibility] = useState(false);
 
-    function isValid(inputString:string, length:number){
-        return inputString.length >= length && !(inputString.includes(" "));
+    function isValid(inputString:string, length:number, lengthMax:number){
+        return inputString.length >= length && inputString.length <= lengthMax && !(inputString.includes(" "));
     }
 
     function checkFirstName(){
-        return isValid(firstName, 3) && /^\p{L}+$/u.test(firstName);
+        return isValid(firstName, 3, 50) && /^\p{L}+$/u.test(firstName);
     }
 
     function checkLastName(){
-        return isValid(lastName, 3) && /^\p{L}+$/u.test(lastName)
+        return isValid(lastName, 3, 50) && /^\p{L}+$/u.test(lastName)
     }
 
     function checkUsername(){
         //make sure the basic requirements are met first
-        if(!isValid(usernameInput, 3)){return false}
+        if(!isValid(usernameInput, 3, 25)){return false}
 
         //make absolutely sure these names cannot be instantiated
         const RESTRICTED_USERNAMES = [
@@ -68,7 +68,7 @@ export default function HomeScreen() {
 
     function checkPassword(){
         // 1. No spaces and 8 long
-        return isValid(passwordInput, 8)
+        return isValid(passwordInput, 8, 72);
     }
 
     function checkEmail(){

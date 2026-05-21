@@ -1,12 +1,15 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/FloresVal07/OfferTok/models"
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -56,7 +59,47 @@ func testingSignup(c *gin.Context) {
 }
 
 func main() {
-	r := gin.Default()
+	// load env
+	godotenv.Load()
+
+	// DB CONNECTION URI
+	dbURI := os.Getenv("DB_URI")
+
+	fmt.Println(dbURI)
+
+	db, err := sql.Open("postgres", dbURI)
+	if err != nil {
+		panic(err)
+	}
+
+	rows, err := db.Query("Select * from users")
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("------DATABASE RETURNED------")
+	for rows.Next() {
+		var id int
+		var username string
+		var email string
+		var firstName string
+		var lastName string
+		var zip string
+		var password string
+		var isActive bool
+		var createdAt string
+
+		err = rows.Scan(&id, &username, &email, &firstName, &lastName, &zip, &password, &isActive, &createdAt)
+
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Printf("ID: %d, %s %s, (%s), Email: %s, Password: %s, Zip: %s, Is Active: %t, Created At: %s\n", id, firstName, lastName, username, email, password, zip, isActive, createdAt)
+	}
+	defer db.Close()
+
+	/*r := gin.Default()
 
 	//setup cors config to restrict access
 	r.Use(cors.New(cors.Config{
@@ -70,4 +113,5 @@ func main() {
 	r.GET("/ping", tester)
 	r.POST("/signup", testingSignup)
 	r.Run("0.0.0.0:8080")
+	*/
 }
