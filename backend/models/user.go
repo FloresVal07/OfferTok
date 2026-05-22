@@ -1,6 +1,12 @@
 package models
 
-/**
+type UniqueProperty struct {
+	Username string `json:"username" binding:"required"`
+	Email    string `json:"email" binding:"required"`
+}
+
+/*
+*
 This structure is just a User before the crypt hashing, once thats done with the User struct is used
 */
 type SignupRequest struct {

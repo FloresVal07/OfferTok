@@ -4,7 +4,7 @@ import * as Location from "expo-location";
 // 1. Import your new custom button
 import { IconedButton, SimpleButton } from '../components/animatedButton'; 
 import  { CustomInput }  from "../components/submissionForm";
-import { registerUser } from "../services/api";
+import { registerUser, checkAvailability } from "../services/api";
 
 export default function HomeScreen() {
     const logoMap = [
@@ -180,6 +180,16 @@ export default function HomeScreen() {
         }
     }
 
+    const handleAvailabilityCheck = async () => {
+        try {
+            const result = await checkAvailability(usernameInput, emailInput);
+            return true; // This will contain the backend's response about availability
+        } catch (err:any) {
+            alert(err.message); 
+            return false; // Tell the frontend it failed
+        }
+    }
+
     {/**Welcome Page */}
     if (step === 0) {
         return (
@@ -291,8 +301,13 @@ export default function HomeScreen() {
                         </Pressable>
                     </View>
                     <View>
-                        <SimpleButton title="Submit" onPress={() => {
-                            checkSignupFormInfo() ? stepForward() : null
+                        <SimpleButton title="Submit" onPress={async () => {
+                            const isAvailable = await handleAvailabilityCheck();
+                            if (checkSignupFormInfo() && isAvailable) {
+                                stepForward();
+                            }else{
+                                console.warn("Signup form info invalid or username/email not available");
+                            }
                         }} color="#0F62FE" textColor="#ffffff"/>
                     </View>
                 </View>
