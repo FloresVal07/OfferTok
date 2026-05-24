@@ -113,7 +113,7 @@ export default function HomeScreen() {
             console.log("Invalid email");
             return false;
         }
-        console.log("Success!");
+        console.log("Valid Login Information!!");
         return true;
     }
     
@@ -183,7 +183,7 @@ export default function HomeScreen() {
     const handleAvailabilityCheck = async () => {
         try {
             const result = await checkAvailability(usernameInput, emailInput);
-            return true; // This will contain the backend's response about availability
+            return result; // This will contain the backend's response about availability
         } catch (err:any) {
             alert(err.message); 
             return false; // Tell the frontend it failed
@@ -302,8 +302,9 @@ export default function HomeScreen() {
                     </View>
                     <View>
                         <SimpleButton title="Submit" onPress={async () => {
-                            const isAvailable = await handleAvailabilityCheck();
-                            if (checkSignupFormInfo() && isAvailable) {
+                            const isAvailableRes = await handleAvailabilityCheck();
+                            console.log(isAvailableRes.available);
+                            if (checkSignupFormInfo() && isAvailableRes.available) {
                                 stepForward();
                             }else{
                                 console.warn("Signup form info invalid or username/email not available");
@@ -370,7 +371,6 @@ export default function HomeScreen() {
         return (
             <View style={styles.container}>
                 <Text style={[styles.text, { fontSize: 50, width: '90%', textAlign: 'center'}]}>Access Granted!</Text> 
-                <SimpleButton title="Go Back" onPress={() => stepDown()} color="#F2F4F8" textColor="#000000"/>
             </View>
         );
     }

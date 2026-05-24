@@ -9,7 +9,8 @@ export const checkAvailability = async (username:string, email:string) => {
             },
             body: JSON.stringify({Username: username, Email: email}),
         });
-        return await response.json();
+        const res = await response.json();
+        return res;
     } catch (err) {
         console.error("Network Error:", err);
         throw err;
