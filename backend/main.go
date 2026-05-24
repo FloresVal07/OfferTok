@@ -26,43 +26,57 @@ func tester(c *gin.Context) {
 	})
 }
 
-func testingSignup(c *gin.Context) {
-	// Create an instance of your User model
-	var req models.SignupRequest
+func signup(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Create an instance of your User model
+		var req models.SignupRequest
+		var newUserId int
 
-	// Bind the incoming JSON from React Native to the struct
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+		// Bind the incoming JSON from React Native to the struct
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		//call the hashing function
+		hashedPassword, err := HashPassword(req.Password)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to secure password"})
+			return
+		}
+
+		//map the created user to the signup info that has been passed along
+		newUser := models.User{
+			FirstName: req.FirstName,
+			LastName:  req.LastName,
+			Username:  req.Username,
+			Email:     req.Email,
+			Password:  hashedPassword,
+			Zip:       req.Zip,
+		}
+
+		err = db.QueryRow(`
+			INSERT INTO users (first_name, last_name, username, email, password_hash, zip_code)
+			VALUES ($1, $2, $3, $4, $5, $6)
+			RETURNING id
+			`, newUser.FirstName, newUser.LastName, newUser.Username, newUser.Email, newUser.Password, newUser.Zip).Scan(&newUserId)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database injection failed"})
+			return
+		}
+
+		fmt.Printf("Successfully created secure user object for: %s\n", newUser.Username)
+
+		// 5. Return success
+		c.JSON(http.StatusOK, gin.H{"status": "received", "user": newUser.Username})
 	}
-
-	//call the hashing function
-	hashedPassword, err := HashPassword(req.Password)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to secure password"})
-		return
-	}
-
-	//map the created user to the signup info that has been passed along
-	newUser := models.User{
-		FirstName: req.FirstName,
-		LastName:  req.LastName,
-		Username:  req.Username,
-		Email:     req.Email,
-		Password:  hashedPassword,
-		Zip:       req.Zip,
-	}
-
-	fmt.Printf("Successfully created secure user object for: %s\n", newUser.Username)
-
-	// 5. Return success
-	c.JSON(http.StatusOK, gin.H{"status": "received", "user": newUser.Username})
 }
 
 /*
 *
 @Param db: the database connection to be used for the query
 @return: a gin.HandlerFunc that checks if the username or email already exists in the database, if it does it returns an error, otherwise it allows the request to continue to the next handler
+@description: To be used within the frontend to reduce conflicts in database CRUD
 */
 func signupUnique(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -122,37 +136,9 @@ func main() {
 	// DB CONNECTION URI
 	dbURI := os.Getenv("DB_URI")
 
-	fmt.Println(dbURI)
-
 	db, err := sql.Open("postgres", dbURI)
 	if err != nil {
 		panic(err)
-	}
-
-	rows, err := db.Query("Select * from users")
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println("------DATABASE RETURNED------")
-	for rows.Next() {
-		//mapping response to variables
-		var id int
-		var username string
-		var email string
-		var firstName string
-		var lastName string
-		var zip string
-		var password string
-		var isActive bool
-		var createdAt string
-		err = rows.Scan(&id, &username, &email, &firstName, &lastName, &zip, &password, &isActive, &createdAt)
-		if err != nil {
-			panic(err)
-		}
-
-		//print out the user info to the console
-		fmt.Printf("ID: %d, %s %s, (%s), Email: %s, Password: %s, Zip: %s, Is Active: %t, Created At: %s\n", id, firstName, lastName, username, email, password, zip, isActive, createdAt)
 	}
 
 	r := gin.Default()
@@ -167,7 +153,7 @@ func main() {
 	}))
 
 	r.GET("/ping", tester)
-	r.POST("/api/signup", testingSignup)
+	r.POST("/api/signup", signup(db))
 	r.POST("/api/signupUnique", signupUnique(db))
 	r.Run("0.0.0.0:8080")
 	defer db.Close()
