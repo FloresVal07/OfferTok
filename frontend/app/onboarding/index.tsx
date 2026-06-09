@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, Image, Pressable } from 'react-native';
+import { router } from 'expo-router';
+
 import * as Location from "expo-location";
 // 1. Import your new custom button
-import { IconedButton, SimpleButton } from '../components/animatedButton'; 
-import  { CustomInput }  from "../components/submissionForm";
-import { registerUser, checkAvailability } from "../services/api";
+import { IconedButton, SimpleButton } from '../../components/animatedButton'; 
+import  { CustomInput }  from "../../components/submissionForm";
+import { registerUser, checkAvailability } from "../../services/api";
 
 export default function HomeScreen() {
     const logoMap = [
         // Using require + as any bypasses the "Module not found" error
-        { name: 'Email', img: require("../assets/images/mail.png") as any }, 
-        { name: 'Apple', img: require("../assets/images/apple.png") as any },
-        { name: 'Gmail', img: require("../assets/images/google.png") as any }
+        { name: 'Email', img: require("../../assets/images/mail.png") as any }, 
+        { name: 'Apple', img: require("../../assets/images/apple.png") as any },
+        { name: 'Gmail', img: require("../../assets/images/google.png") as any }
     ];
 
     const [step, setStep] = useState(0);
@@ -195,7 +197,7 @@ export default function HomeScreen() {
         return (
             <View style={[styles.container, {gap: 75}]}>
                 <Image
-                    source={require('../assets/images/logoPlaceholder.png')}
+                    source={require('../../assets/images/logoPlaceholder.png')}
                     style={{ aspectRatio: 1/1 , width: '100%'}}
                 /> 
                 <Text style={[styles.text, { fontSize: 50, width: '90%', textAlign: 'center'}]}>Welcome To OfferTok!</Text> 
@@ -208,7 +210,7 @@ export default function HomeScreen() {
             <View style={[styles.container, {gap: 60}]}>
                 <Text style={[styles.text, { fontSize: 50, width: '100%', textAlign: 'center', fontWeight: '500'}]}>Login / Sign up</Text> 
                 <Image
-                    source={require('../assets/images/logoPlaceholderLong.png')}
+                    source={require('../../assets/images/logoPlaceholderLong.png')}
                     style={{ width: '100%'}}
                 /> 
                 <View style={{width: '100%', gap:20}}>
@@ -232,7 +234,7 @@ export default function HomeScreen() {
         return (
             <View style={[styles.container, {gap: 35}]}>
                 <Image
-                    source={require('../assets/images/logoPlaceholderLong.png')}
+                    source={require('../../assets/images/logoPlaceholderLong.png')}
                     style={{ width: '100%'}}
                 /> 
                 <View>
@@ -294,7 +296,7 @@ export default function HomeScreen() {
                             style={{ paddingLeft: 10, paddingTop: 15 }} // Padding adjusts for the label height
                         >
                             <Image 
-                                source={passwordVisibility ? require("../assets/images/closed-eye.png") : require("../assets/images/open-eye.png")}
+                                source={passwordVisibility ? require("../../assets/images/closed-eye.png") : require("../../assets/images/open-eye.png")}
                                 style={{ width: 25, height: 25 }} // Always give images fixed dimensions
                                 resizeMode="contain"
                             />
@@ -320,11 +322,11 @@ export default function HomeScreen() {
     }else if(step === 3){
         return(
             <View style={[styles.container, {gap: 40}]}>
-                <Image source={require("../assets/images/locationBlack.png")}/>
+                <Image source={require("../../assets/images/locationBlack.png")}/>
                 <Text style={[styles.text, { fontSize: 34, width: '90%', textAlign: 'center'}]}>Where would you like to discover deals from?</Text> 
                 <IconedButton 
                     onPress={() => handleGPS()}
-                    image={require("../assets/images/locationBlue.png")}
+                    image={require("../../assets/images/locationBlue.png")}
                     title="Use my location"
                     color="#0F62FE"
                     radius={25}/>
@@ -368,11 +370,7 @@ export default function HomeScreen() {
             </View>
         );
     }else{
-        return (
-            <View style={styles.container}>
-                <Text style={[styles.text, { fontSize: 50, width: '90%', textAlign: 'center'}]}>Access Granted!</Text> 
-            </View>
-        );
+        return <View style={styles.container} />;
     }
 }
 
